@@ -1,3 +1,5 @@
+DELAY_BETWEEN_REQUESTS = 1
+
 require 'open-uri'
 require 'nokogiri'
 require 'json'
@@ -26,27 +28,31 @@ document = Nokogiri::HTML(open("http://ithappens.me/"))
 last_story_id = document.css('.story .id')[0].text.to_i
 last_page = document.css('.nav .prev')[0].text.to_i + 2
 
-page_url = "http://ithappens.me/page/#{last_page}"
-document = Nokogiri::HTML(open(page_url))
-document.css('.story').each do |element|
-    puts parse_story element
+page = 1
+
+file = File.open('ithappens.json', 'w')
+file.puts "[\n"
+comma = ","
+
+last_page = 3
+
+while page <= last_page do
+
+    page_url = "http://ithappens.me/page/#{page}"
+    document = Nokogiri::HTML(open(page_url))
+
+    stories = document.css('.story')
+    stories.reverse_each do |element|
+        if page == last_page and element == stories.first
+            comma = ""
+        end
+        file.puts parse_story(element)+comma
+    end
+
+    page += 1
+    sleep(DELAY_BETWEEN_REQUESTS)
+
 end
 
-=begin
-while story[:id] <= last_story_id do
-
-    story_url = "http://ithappens.me/story/#{story[:id]}"
-    story[:url] = story_url
-
-    document = Nokogiri::HTML(open(story_url))
-    element = document.css('.story')[0];
-
-    puts parse_story element, story   
-
-    story[:id] += 1
-
-    sleep(1)
-
-end
-=end
+file.puts "]"
 
