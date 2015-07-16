@@ -1,9 +1,11 @@
-DELAY_BETWEEN_REQUESTS = 1
+# global options
+DELAY_BETWEEN_REQUESTS = 0
 
 require 'open-uri'
 require 'nokogiri'
 require 'json'
 
+# parses DOM element of a story and returns a JSON string
 def parse_story(element)
     story = {}
 
@@ -24,35 +26,39 @@ def parse_story(element)
     return JSON.pretty_generate story
 end
 
+# open home page and find last page number
 document = Nokogiri::HTML(open("http://ithappens.me/"))
-last_story_id = document.css('.story .id')[0].text.to_i
 last_page = document.css('.nav .prev')[0].text.to_i + 2
 
-page = 1
-
+# open the file to write to
 file = File.open('ithappens.json', 'w')
 file.puts "[\n"
 comma = ","
 
-last_page = 3
+# process all the pages
+1.upto last_page do |page|
 
-while page <= last_page do
-
+    # open a page
     page_url = "http://ithappens.me/page/#{page}"
     document = Nokogiri::HTML(open(page_url))
 
+    # parse all stories and save 'em to file
     stories = document.css('.story')
     stories.reverse_each do |element|
+        # if a story is last to parse, it should not be followed by comma
         if page == last_page and element == stories.first
             comma = ""
         end
+        # parse and save
         file.puts parse_story(element)+comma
     end
-
+    
+    #increment and have a rest
     page += 1
     sleep(DELAY_BETWEEN_REQUESTS)
 
 end
 
+# final bracket
 file.puts "]"
 
