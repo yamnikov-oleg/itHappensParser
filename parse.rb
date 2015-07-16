@@ -1,6 +1,3 @@
-# global options
-DELAY_BETWEEN_REQUESTS = 0
-
 require 'open-uri'
 require 'nokogiri'
 require 'json'
@@ -30,18 +27,24 @@ end
 document = Nokogiri::HTML(open("http://ithappens.me/"))
 last_page = document.css('.nav .prev')[0].text.to_i + 2
 
+# is file exists...
+if File.file?('ithappens.json')
+    puts "[WARNING] File 'ithappens.json' already exists, overwriting it."
+end
+
 # open the file to write to
 file = File.open('ithappens.json', 'w')
+puts "Writing to 'ithappens.json'"
 file.puts "[\n"
 comma = ","
 
 # process all the pages
 1.upto last_page do |page|
-
+    
     # open a page
     page_url = "http://ithappens.me/page/#{page}"
     document = Nokogiri::HTML(open(page_url))
-
+    
     # parse all stories and save 'em to file
     stories = document.css('.story')
     stories.reverse_each do |element|
@@ -53,10 +56,12 @@ comma = ","
         file.puts parse_story(element)+comma
     end
     
-    #increment and have a rest
+    #increment
+    if page % 10 == 0 
+        puts "Processed up to #{page} pages (#{page*9} stories)"
+    end
     page += 1
-    sleep(DELAY_BETWEEN_REQUESTS)
-
+    
 end
 
 # final bracket
