@@ -25,7 +25,7 @@ end
 
 # open home page and find last page number
 document = Nokogiri::HTML(open("http://ithappens.me/"))
-last_page = document.css('.nav .prev')[0].text.to_i + 2
+last_page = document.css('.nav .prev')[0].text.to_i + 1
 
 # is file exists...
 if File.file?('ithappens.json')
