@@ -65,4 +65,6 @@ end
 
 # final bracket
 file.puts "]"
+file.close
 
+puts "All #{last_page} pages has been parsed"
