@@ -56,11 +56,10 @@ comma = ","
         file.puts parse_story(element)+comma
     end
     
-    #increment
+    #notify with progress
     if page % 10 == 0 
         puts "Processed up to #{page} pages (#{page*9} stories)"
     end
-    page += 1
     
 end
 
