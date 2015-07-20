@@ -1,7 +1,6 @@
 require 'open-uri'
 require 'nokogiri'
 require 'json'
-require 'thread'
 
 # constant
 MAX_THREADS_RUNNING = 100
@@ -35,16 +34,6 @@ def parse_page(page)
     # parse all stories and save 'em to file
     stories = document.css('.story')
     stories.reverse_each do |element|
-        #
-        # this piece of code was actual in single-threaded version
-        # but no longer is, since last story won't always be written last
-        #
-        # if a story is last to parse, it should not be followed by comma
-        #if page == last_page and element == stories.first
-        #    comma = ""
-        #end
-
-        # parse and save
         $fileAccess.synchronize do
             $file.puts parse_story(element)+","
         end
@@ -82,7 +71,6 @@ $fileAccess = Mutex.new
     # parse and save the page
     thread = Thread.new(page){|page| parse_page(page)}
     thread.abort_on_exception = true
-    thread.run
     
     # notify with progress
     if page % 10 == 0 
@@ -91,9 +79,7 @@ $fileAccess = Mutex.new
     
 end
 
-while Thread.list.size > 1
-    sleep 0.1
-end
+Thread.list.each { |t| t.join if t != Thread.main }
 
 # final bracket
 $file.puts "]"
